@@ -3,442 +3,126 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Rutube Loader // Claude × OpenClaw</title>
-  <meta name="description" content="Футуристичный загрузчик видео с Rutube. Вставь ссылку, нажми кнопку и скачай файл через backend на VPS.">
+  <title>Access</title>
   <link rel="icon" type="image/svg+xml" href="./favicon.svg">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Orbitron:wght@500;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #050816;
-      --bg-2: #0a1024;
-      --panel: rgba(10,16,36,.82);
-      --line: rgba(106,168,255,.16);
-      --text: #e8f1ff;
-      --muted: #93a7c5;
-      --cyan: #69f0ff;
-      --blue: #6ea8ff;
-      --violet: #9b7bff;
-      --lime: #91ffc3;
-      --hot: #ff5fa9;
-      --radius: 26px;
-      --shadow: 0 22px 80px rgba(0,0,0,.42);
+      --bg: #0c0c0f;
+      --panel: #15161b;
+      --line: #23252d;
+      --text: #f1f3f7;
+      --muted: #8a909c;
+      --focus: #d7dbe5;
     }
 
     * { box-sizing: border-box; }
     body {
       margin: 0;
-      font-family: 'IBM Plex Mono', monospace;
-      color: var(--text);
-      background:
-        radial-gradient(circle at 15% 0%, rgba(105,240,255,.16), transparent 28%),
-        radial-gradient(circle at 85% 0%, rgba(155,123,255,.18), transparent 30%),
-        radial-gradient(circle at 50% 100%, rgba(145,255,195,.08), transparent 34%),
-        linear-gradient(180deg, #040611 0%, #070b18 50%, #050816 100%);
       min-height: 100vh;
-      overflow-x: hidden;
-    }
-
-    body::before {
-      content: "";
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      background:
-        linear-gradient(rgba(255,255,255,.028) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,.02) 1px, transparent 1px);
-      background-size: 34px 34px;
-      mask-image: radial-gradient(circle at center, black 32%, transparent 90%);
-      opacity: .32;
-    }
-
-    .noise {
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      opacity: .06;
-      background-image: radial-gradient(rgba(255,255,255,.35) .7px, transparent .7px);
-      background-size: 8px 8px;
-      mix-blend-mode: soft-light;
-    }
-
-    .container {
-      width: min(1080px, calc(100% - 32px));
-      margin: 0 auto;
-      position: relative;
-      z-index: 1;
-    }
-
-    .topbar {
-      display: flex;
-      justify-content: space-between;
-      gap: 16px;
-      align-items: center;
-      padding: 18px 0;
-      color: var(--muted);
-      font-size: 12px;
-      text-transform: uppercase;
-      letter-spacing: .12em;
-    }
-
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      font-family: 'Orbitron', sans-serif;
-      color: var(--text);
-    }
-
-    .brand-mark {
-      width: 15px;
-      height: 15px;
-      border-radius: 5px;
-      background: linear-gradient(135deg, var(--cyan), var(--violet));
-      box-shadow: 0 0 18px rgba(105,240,255,.6);
-    }
-
-    .hero {
       display: grid;
-      grid-template-columns: minmax(0, 1.1fr) minmax(300px, .9fr);
-      gap: 22px;
-      padding: 34px 0 12px;
+      place-items: center;
+      background: #0b0c10;
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     }
 
-    .panel {
-      background: linear-gradient(180deg, rgba(13,20,44,.88), rgba(7,11,24,.88));
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      backdrop-filter: blur(18px);
-    }
-
-    .hero-main {
-      padding: 32px;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .hero-main::after {
-      content: "";
-      position: absolute;
-      inset: auto -10% -35% 40%;
-      height: 260px;
-      background: radial-gradient(circle, rgba(105,240,255,.16), transparent 66%);
-    }
-
-    .eyebrow {
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
-      padding: 8px 14px;
-      border-radius: 999px;
-      border: 1px solid rgba(105,240,255,.24);
-      background: rgba(105,240,255,.08);
-      color: var(--cyan);
-      font-size: 12px;
-      text-transform: uppercase;
-      letter-spacing: .12em;
-      margin-bottom: 18px;
-    }
-
-    .eyebrow::before {
-      content: "";
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: var(--lime);
-      box-shadow: 0 0 14px rgba(145,255,195,.74);
-    }
-
-    h1 {
-      margin: 0;
-      font-family: 'Orbitron', sans-serif;
-      font-size: clamp(38px, 6vw, 74px);
-      line-height: .96;
-      text-transform: uppercase;
-      letter-spacing: -.03em;
-    }
-
-    h1 .accent { color: var(--cyan); }
-
-    .lead {
-      margin: 22px 0 0;
-      max-width: 60ch;
-      color: var(--muted);
-      line-height: 1.8;
-      font-size: 15px;
-    }
-
-    .hero-side {
-      padding: 24px;
-      display: flex;
-      flex-direction: column;
-      gap: 18px;
-    }
-
-    .terminal {
-      background: rgba(3,6,16,.9);
-      border: 1px solid rgba(255,255,255,.08);
-      border-radius: 22px;
+    .card {
+      width: min(520px, calc(100% - 24px));
       padding: 18px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 16px;
     }
 
-    .terminal-head { display: flex; gap: 8px; margin-bottom: 14px; }
-    .terminal-head span {
-      width: 10px; height: 10px; border-radius: 50%;
-    }
-    .terminal-head span:nth-child(1){ background:#ff7185; }
-    .terminal-head span:nth-child(2){ background:#ffd46f; }
-    .terminal-head span:nth-child(3){ background:#7effb0; }
-
-    .terminal p {
-      margin: 0 0 10px;
-      font-size: 13px;
-      color: var(--muted);
-      line-height: 1.65;
-    }
-    .terminal strong { color: var(--cyan); }
-
-    .mini {
-      padding: 16px 18px;
-      border-radius: 18px;
-      background: rgba(255,255,255,.03);
-      border: 1px solid rgba(255,255,255,.08);
-      color: var(--muted);
-      line-height: 1.7;
-      font-size: 13px;
-    }
-
-    .section {
-      margin-top: 28px;
-      padding: 28px;
-    }
-
-    .section h2 {
-      margin: 0 0 10px;
-      font-family: 'Orbitron', sans-serif;
-      font-size: clamp(24px, 3vw, 38px);
-      text-transform: uppercase;
-      letter-spacing: -.03em;
-    }
-
-    .section p.desc {
-      margin: 0 0 20px;
-      color: var(--muted);
-      line-height: 1.8;
-      max-width: 68ch;
-    }
-
-    .form-grid {
+    .stack {
       display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 14px;
-      align-items: center;
+      gap: 10px;
     }
 
-    .input-wrap {
-      position: relative;
-    }
-
-    input[type="url"] {
+    input {
       width: 100%;
-      min-height: 58px;
-      border-radius: 18px;
-      border: 1px solid rgba(255,255,255,.1);
-      outline: none;
-      background: rgba(0,0,0,.22);
+      min-height: 48px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: #0f1014;
       color: var(--text);
-      padding: 0 18px;
-      font-family: inherit;
-      font-size: 15px;
-      transition: border-color .2s ease, box-shadow .2s ease;
-    }
-
-    input[type="url"]:focus {
-      border-color: rgba(105,240,255,.42);
-      box-shadow: 0 0 0 4px rgba(105,240,255,.08);
-    }
-
-    .btn {
-      min-height: 58px;
-      border: 1px solid rgba(105,240,255,.36);
-      border-radius: 18px;
-      background: linear-gradient(135deg, rgba(105,240,255,.16), rgba(110,168,255,.14));
-      color: var(--text);
-      padding: 0 22px;
-      font-family: inherit;
+      padding: 0 14px;
       font-size: 14px;
-      text-transform: uppercase;
-      letter-spacing: .1em;
+      outline: none;
+    }
+
+    input:focus {
+      border-color: var(--focus);
+    }
+
+    button {
+      min-height: 48px;
+      border-radius: 12px;
+      border: 1px solid #2a2d36;
+      background: #f1f3f7;
+      color: #0d0f14;
+      font-size: 14px;
+      font-weight: 600;
       cursor: pointer;
-      transition: transform .2s ease, box-shadow .2s ease, background .2s ease;
     }
 
-    .btn:hover:not(:disabled) {
-      transform: translateY(-2px);
-      box-shadow: 0 16px 40px rgba(105,240,255,.16);
-    }
-
-    .btn:disabled {
+    button:disabled {
+      opacity: .7;
       cursor: progress;
-      opacity: .72;
     }
-
-    .hint-grid {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0,1fr));
-      gap: 14px;
-      margin-top: 18px;
-    }
-
-    .hint {
-      padding: 16px;
-      border-radius: 18px;
-      background: rgba(255,255,255,.03);
-      border: 1px solid rgba(255,255,255,.08);
-      color: var(--muted);
-      font-size: 13px;
-      line-height: 1.7;
-    }
-
-    .hint strong { color: var(--text); }
 
     .status {
-      margin-top: 18px;
-      min-height: 26px;
-      font-size: 14px;
+      min-height: 20px;
+      font-size: 13px;
       color: var(--muted);
+      padding: 4px 2px 0;
     }
 
-    .status.ok { color: var(--lime); }
-    .status.err { color: #ff8abf; }
-    .status.work { color: var(--cyan); }
-
-    footer {
-      padding: 28px 0 40px;
-      display: flex;
-      justify-content: space-between;
-      gap: 16px;
-      flex-wrap: wrap;
-      color: var(--muted);
-      font-size: 12px;
-      text-transform: uppercase;
-      letter-spacing: .12em;
-    }
-
-    @media (max-width: 920px) {
-      .hero, .form-grid, .hint-grid { grid-template-columns: 1fr; }
-      .btn { width: 100%; }
-    }
-
-    @media (max-width: 640px) {
-      .container { width: min(100% - 20px, 1080px); }
-      .hero-main, .hero-side, .section { padding: 20px; }
-      h1 { font-size: 36px; }
-    }
+    .status.err { color: #ff8f9d; }
+    .status.ok { color: #a3e8b8; }
   </style>
 </head>
 <body>
-  <div class="noise"></div>
-  <div class="container">
-    <header class="topbar">
-      <div class="brand"><span class="brand-mark"></span><span>Rutube Loader</span></div>
-      <div>Claude × OpenClaw / test3</div>
-    </header>
-
-    <section class="hero">
-      <div class="panel hero-main">
-        <div class="eyebrow">Скачивание видео через VPS backend</div>
-        <h1>Скачать видео с <span class="accent">Rutube</span> за пару кликов</h1>
-        <p class="lead">
-          Вставляешь ссылку на видео с Rutube, нажимаешь кнопку, backend на VPS скачивает ролик и сразу отдаёт файл в твой браузер.
-          Никаких сторонних веб-сервисов, только твой frontend, твой VPS и локальная загрузка в браузер.
-        </p>
-      </div>
-
-      <aside class="panel hero-side">
-        <div class="terminal">
-          <div class="terminal-head"><span></span><span></span><span></span></div>
-          <p>&gt; frontend: <strong>GitHub Pages</strong></p>
-          <p>&gt; backend: <strong>VPS downloader</strong></p>
-          <p>&gt; engine: <strong>yt-dlp + ffmpeg</strong></p>
-          <p>&gt; result: <strong>файл улетает в загрузки браузера</strong></p>
-        </div>
-        <div class="mini">Поддерживаются только ссылки <strong>rutube.ru</strong>. Если Rutube изменит схему выдачи, backend можно будет обновить отдельно, не ломая сайт.</div>
-      </aside>
-    </section>
-
-    <section class="panel section">
-      <h2>Вставь ссылку и нажми «Скачать»</h2>
-      <p class="desc">Если backend доступен и ссылка валидная, браузер начнёт скачивание автоматически. Для некоторых браузеров сохранение начнётся после стандартного системного диалога.</p>
-
-      <form id="downloadForm">
-        <div class="form-grid">
-          <div class="input-wrap">
-            <input id="urlInput" type="url" placeholder="https://rutube.ru/video/..." required>
-          </div>
-          <button id="downloadBtn" class="btn" type="submit">Скачать</button>
-        </div>
-      </form>
-
-      <div id="status" class="status">Ожидание ссылки.</div>
-
-      <div class="hint-grid">
-        <div class="hint"><strong>Шаг 1.</strong> Вставь ссылку на видео Rutube.</div>
-        <div class="hint"><strong>Шаг 2.</strong> Нажми кнопку, backend начнёт загрузку на VPS.</div>
-        <div class="hint"><strong>Шаг 3.</strong> Готовый файл вернётся в браузер и начнёт скачиваться.</div>
-      </div>
-    </section>
-
-    <footer>
-      <span>Rutube Loader // futuristic utility UI</span>
-      <span>Frontend: GitHub Pages • Backend: VPS</span>
-    </footer>
-  </div>
+  <main class="card">
+    <form id="form" class="stack">
+      <input id="url" type="url" placeholder="Ссылка" required>
+      <input id="pin" type="password" placeholder="PIN" inputmode="numeric" required>
+      <button id="submit" type="submit">Скачать</button>
+      <div id="status" class="status"></div>
+    </form>
+  </main>
 
   <script>
     const BACKEND_BASE = 'http://157.22.176.127:8011';
-    const form = document.getElementById('downloadForm');
-    const input = document.getElementById('urlInput');
-    const button = document.getElementById('downloadBtn');
+    const form = document.getElementById('form');
+    const urlInput = document.getElementById('url');
+    const pinInput = document.getElementById('pin');
+    const submitBtn = document.getElementById('submit');
     const statusEl = document.getElementById('status');
 
-    function setStatus(text, kind = '') {
+    function setStatus(text = '', kind = '') {
       statusEl.textContent = text;
       statusEl.className = 'status' + (kind ? ' ' + kind : '');
     }
 
     form.addEventListener('submit', async (event) => {
       event.preventDefault();
-      const url = input.value.trim();
+      const url = urlInput.value.trim();
+      const pin = pinInput.value.trim();
 
-      if (!url) {
-        setStatus('Сначала вставь ссылку на Rutube.', 'err');
+      if (!url || !pin) {
+        setStatus('Заполни поля.', 'err');
         return;
       }
 
-      let parsed;
-      try {
-        parsed = new URL(url);
-      } catch {
-        setStatus('Похоже, ссылка невалидная.', 'err');
-        return;
-      }
-
-      if (!/^(www\.)?rutube\.ru$/.test(parsed.hostname) && parsed.hostname !== 'm.rutube.ru') {
-        setStatus('Сейчас поддерживаются только ссылки Rutube.', 'err');
-        return;
-      }
-
-      button.disabled = true;
-      setStatus('Запрос отправлен. Если видео доступно, скоро начнётся скачивание...', 'work');
+      submitBtn.disabled = true;
+      setStatus('Обработка...');
 
       try {
-        const response = await fetch(`${BACKEND_BASE}/download?url=${encodeURIComponent(url)}`);
+        const response = await fetch(`${BACKEND_BASE}/download?url=${encodeURIComponent(url)}&pin=${encodeURIComponent(pin)}`);
 
         if (!response.ok) {
-          let message = 'Не удалось скачать видео.';
+          let message = 'Ошибка.';
           try {
             const data = await response.json();
             if (data && data.detail) message = data.detail;
@@ -449,7 +133,7 @@
         const blob = await response.blob();
         const disposition = response.headers.get('Content-Disposition') || '';
         const fileNameMatch = disposition.match(/filename\*?=(?:UTF-8''|"?)([^";]+)/i);
-        const fileName = fileNameMatch ? decodeURIComponent(fileNameMatch[1].replace(/"/g, '')) : 'rutube-video.mp4';
+        const fileName = fileNameMatch ? decodeURIComponent(fileNameMatch[1].replace(/"/g, '')) : 'file.bin';
 
         const objectUrl = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -460,11 +144,11 @@
         a.remove();
         URL.revokeObjectURL(objectUrl);
 
-        setStatus(`Скачивание запущено: ${fileName}`, 'ok');
+        setStatus('Готово.', 'ok');
       } catch (error) {
-        setStatus(error.message || 'Произошла ошибка во время скачивания.', 'err');
+        setStatus(error.message || 'Ошибка.', 'err');
       } finally {
-        button.disabled = false;
+        submitBtn.disabled = false;
       }
     });
   </script>
