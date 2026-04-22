@@ -120,12 +120,11 @@
 
       try {
         const target = `${BACKEND_BASE}/download?url=${encodeURIComponent(url)}&pin=${encodeURIComponent(pin)}`;
-        const frame = document.createElement('iframe');
-        frame.style.display = 'none';
-        frame.src = target;
-        document.body.appendChild(frame);
-        setTimeout(() => frame.remove(), 120000);
-        setStatus('Запрос отправлен.', 'ok');
+        const win = window.open(target, '_blank', 'noopener,noreferrer');
+        if (!win) {
+          throw new Error('Браузер заблокировал открытие вкладки.');
+        }
+        setStatus('Открыто в новой вкладке.', 'ok');
       } catch (error) {
         setStatus(error.message || 'Ошибка.', 'err');
       } finally {
