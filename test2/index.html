@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Protocol Wealth // Claude × OpenClaw</title>
+  <meta name="description" content="10 шагов к богатству и успеху с Claude и OpenClaw. Футуристичный IT-лендинг на русском языке.">
+  <link rel="icon" type="image/svg+xml" href="./favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Orbitron:wght@500;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #050816;
+      --bg-soft: #0a1024;
+      --panel: rgba(10, 16, 36, 0.76);
+      --panel-strong: rgba(13, 20, 44, 0.95);
+      --text: #e8f1ff;
+      --muted: #8fa6c9;
+      --line: rgba(120, 169, 255, 0.18);
+      --cyan: #69f0ff;
+      --blue: #6ea8ff;
+      --violet: #9b7bff;
+      --lime: #8dffb8;
+      --hot: #ff5db1;
+      --shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
+      --radius: 26px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: 'IBM Plex Mono', monospace;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 20% 10%, rgba(105,240,255,0.14), transparent 28%),
+        radial-gradient(circle at 80% 0%, rgba(155,123,255,0.18), transparent 30%),
+        radial-gradient(circle at 50% 100%, rgba(141,255,184,0.08), transparent 32%),
+        linear-gradient(180deg, #040611 0%, #070b18 48%, #050816 100%);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background:
+        linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+      background-size: 36px 36px;
+      mask-image: radial-gradient(circle at center, black 35%, transparent 90%);
+      opacity: 0.3;
+      z-index: 0;
+    }
+
+    .noise {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.06;
+      z-index: 0;
+      background-image: radial-gradient(rgba(255,255,255,0.35) 0.6px, transparent 0.6px);
+      background-size: 7px 7px;
+      mix-blend-mode: soft-light;
+    }
+
+    .container {
+      width: min(1180px, calc(100% - 40px));
+      margin: 0 auto;
+      position: relative;
+      z-index: 1;
+    }
+
+    .topbar {
+      display: flex;
+      gap: 18px;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 0;
+      color: var(--muted);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-family: 'Orbitron', sans-serif;
+      color: var(--text);
+    }
+
+    .brand-mark {
+      width: 14px;
+      height: 14px;
+      border-radius: 4px;
+      background: linear-gradient(135deg, var(--cyan), var(--violet));
+      box-shadow: 0 0 18px rgba(105, 240, 255, 0.55);
+    }
+
+    .hero {
+      padding: 42px 0 28px;
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(300px, 0.8fr);
+      gap: 28px;
+      align-items: stretch;
+    }
+
+    .hero-panel,
+    .glass,
+    .step,
+    .faq-card,
+    .cta {
+      background: linear-gradient(180deg, rgba(13,20,44,0.86), rgba(8,12,28,0.86));
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(18px);
+    }
+
+    .hero-panel {
+      padding: 34px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-panel::after {
+      content: "";
+      position: absolute;
+      inset: auto -20% -35% 35%;
+      height: 300px;
+      background: radial-gradient(circle, rgba(105,240,255,0.15), transparent 65%);
+      transform: rotate(-8deg);
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(105,240,255,0.26);
+      background: rgba(105,240,255,0.08);
+      color: var(--cyan);
+      font-size: 12px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+    }
+
+    .eyebrow::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--lime);
+      box-shadow: 0 0 14px rgba(141,255,184,0.7);
+    }
+
+    h1 {
+      margin: 0;
+      font-family: 'Orbitron', sans-serif;
+      font-size: clamp(44px, 7vw, 86px);
+      line-height: 0.94;
+      letter-spacing: -0.03em;
+      text-transform: uppercase;
+    }
+
+    h1 .accent {
+      color: var(--cyan);
+      text-shadow: 0 0 24px rgba(105,240,255,0.35);
+    }
+
+    .lead {
+      max-width: 760px;
+      margin: 24px 0 0;
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.8;
+    }
+
+    .lead strong { color: var(--text); }
+
+    .hero-actions {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-top: 30px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 14px 18px;
+      min-height: 52px;
+      border-radius: 16px;
+      text-decoration: none;
+      color: var(--text);
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.03);
+      transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      border-color: rgba(105,240,255,0.5);
+      box-shadow: 0 14px 40px rgba(105,240,255,0.16);
+      background: rgba(105,240,255,0.08);
+    }
+
+    .btn.primary {
+      background: linear-gradient(135deg, rgba(105,240,255,0.18), rgba(110,168,255,0.18));
+      border-color: rgba(105,240,255,0.4);
+    }
+
+    .glass {
+      padding: 28px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .glass::before {
+      content: "";
+      position: absolute;
+      inset: -80px auto auto -40px;
+      width: 180px;
+      height: 180px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(155,123,255,0.3), transparent 68%);
+    }
+
+    .terminal {
+      position: relative;
+      z-index: 1;
+      background: rgba(2, 5, 14, 0.88);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 22px;
+      padding: 18px;
+    }
+
+    .terminal-head {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .terminal-head span {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.24);
+    }
+
+    .terminal-head span:nth-child(1) { background: #ff6b7d; }
+    .terminal-head span:nth-child(2) { background: #ffd76c; }
+    .terminal-head span:nth-child(3) { background: #7dffab; }
+
+    .terminal-line {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 12px;
+      line-height: 1.65;
+    }
+
+    .terminal-line b,
+    .terminal-line strong { color: var(--cyan); font-weight: 600; }
+
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+      margin-top: 18px;
+    }
+
+    .metric {
+      padding: 18px;
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.025);
+    }
+
+    .metric small {
+      display: block;
+      color: var(--muted);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      margin-bottom: 10px;
+    }
+
+    .metric strong {
+      font-family: 'Orbitron', sans-serif;
+      font-size: clamp(28px, 4vw, 42px);
+      color: var(--text);
+      display: block;
+    }
+
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 20px;
+      margin: 74px 0 24px;
+    }
+
+    .section-head h2 {
+      margin: 0;
+      font-family: 'Orbitron', sans-serif;
+      font-size: clamp(28px, 4vw, 48px);
+      text-transform: uppercase;
+      letter-spacing: -0.03em;
+    }
+
+    .section-head p {
+      margin: 0;
+      color: var(--muted);
+      max-width: 520px;
+      line-height: 1.7;
+    }
+
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 18px;
+    }
+
+    .step {
+      padding: 22px;
+      position: relative;
+      overflow: hidden;
+      min-height: 250px;
+    }
+
+    .step:nth-child(1), .step:nth-child(6), .step:nth-child(9) { grid-column: span 5; }
+    .step:nth-child(2), .step:nth-child(4), .step:nth-child(7), .step:nth-child(10) { grid-column: span 7; }
+    .step:nth-child(3), .step:nth-child(5), .step:nth-child(8) { grid-column: span 6; }
+
+    .step::before {
+      content: "";
+      position: absolute;
+      inset: auto -10% -40% auto;
+      width: 180px;
+      height: 180px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(105,240,255,0.18), transparent 68%);
+      opacity: 0.75;
+    }
+
+    .step-number {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 44px;
+      height: 44px;
+      border-radius: 14px;
+      font-family: 'Orbitron', sans-serif;
+      color: var(--bg);
+      background: linear-gradient(135deg, var(--cyan), var(--lime));
+      box-shadow: 0 12px 30px rgba(105,240,255,0.24);
+      margin-bottom: 18px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .step h3 {
+      position: relative;
+      z-index: 1;
+      margin: 0 0 12px;
+      font-size: 22px;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+      max-width: 18ch;
+    }
+
+    .step p {
+      position: relative;
+      z-index: 1;
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.75;
+      font-size: 14px;
+      max-width: 42ch;
+    }
+
+    .step ul {
+      position: relative;
+      z-index: 1;
+      margin: 14px 0 0;
+      padding-left: 18px;
+      color: var(--muted);
+      line-height: 1.7;
+      font-size: 13px;
+    }
+
+    .step .tag {
+      position: relative;
+      z-index: 1;
+      display: inline-flex;
+      margin-top: 16px;
+      padding: 7px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.1);
+      color: var(--cyan);
+      background: rgba(105,240,255,0.07);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .faq {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px;
+      margin-top: 24px;
+    }
+
+    .faq-card {
+      padding: 22px;
+    }
+
+    .faq-card h3 {
+      margin: 0 0 10px;
+      font-size: 18px;
+      text-transform: uppercase;
+    }
+
+    .faq-card p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.75;
+      font-size: 14px;
+    }
+
+    .cta {
+      margin: 80px 0 90px;
+      padding: 34px;
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 24px;
+      align-items: center;
+    }
+
+    .cta h2 {
+      margin: 0 0 12px;
+      font-family: 'Orbitron', sans-serif;
+      font-size: clamp(28px, 4vw, 52px);
+      line-height: 1;
+      text-transform: uppercase;
+    }
+
+    .cta p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.8;
+    }
+
+    .cta-stack {
+      display: grid;
+      gap: 12px;
+    }
+
+    .cta-item {
+      padding: 16px 18px;
+      border-radius: 18px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .cta-item strong { color: var(--text); }
+
+    footer {
+      padding: 0 0 40px;
+      color: var(--muted);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      flex-wrap: wrap;
+    }
+
+    .scan {
+      display: inline-flex;
+      gap: 10px;
+      align-items: center;
+      color: var(--cyan);
+    }
+
+    .scan::before {
+      content: "";
+      width: 42px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--cyan));
+    }
+
+    @media (max-width: 980px) {
+      .hero,
+      .cta,
+      .faq {
+        grid-template-columns: 1fr;
+      }
+
+      .metric-grid { grid-template-columns: 1fr; }
+      .steps { grid-template-columns: 1fr; }
+      .step:nth-child(n) { grid-column: 1; }
+      .section-head { flex-direction: column; align-items: flex-start; }
+    }
+
+    @media (max-width: 640px) {
+      .container { width: min(100% - 24px, 1180px); }
+      .hero-panel, .glass, .step, .faq-card, .cta { padding: 20px; border-radius: 22px; }
+      .topbar { padding-top: 14px; }
+      h1 { font-size: 40px; }
+      .hero-actions { flex-direction: column; }
+      .btn { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="noise"></div>
+  <div class="container">
+    <header class="topbar">
+      <div class="brand"><span class="brand-mark"></span><span>Claude × OpenClaw</span></div>
+      <div>Protocol Wealth / test2 / ru</div>
+    </header>
+
+    <section class="hero">
+      <div class="hero-panel">
+        <div class="eyebrow">Система роста нового поколения</div>
+        <h1>Как стать <span class="accent">богатым</span><br>и успешным за 10 шагов</h1>
+        <p class="lead">
+          Это не мотивационный мусор и не инфоцыганский лендинг. Это <strong>жёсткая IT-стратегия</strong>:
+          берёшь <strong>Claude</strong> как мозг, <strong>OpenClaw</strong> как руки, строишь продукты,
+          автоматизации, агентов и денежные потоки быстрее, чем большинство вообще успевает написать ТЗ.
+        </p>
+        <div class="hero-actions">
+          <a class="btn primary" href="#steps">Открыть протокол</a>
+          <a class="btn" href="#faq">Понять, как это работает</a>
+        </div>
+      </div>
+
+      <aside class="glass">
+        <div class="terminal">
+          <div class="terminal-head"><span></span><span></span><span></span></div>
+          <div class="terminal-line">&gt; role: <b>builder</b></div>
+          <div class="terminal-line">&gt; stack: <strong>Claude</strong> + <strong>OpenClaw</strong> + execution</div>
+          <div class="terminal-line">&gt; target: выйти из режима «делаю руками всё сам»</div>
+          <div class="terminal-line">&gt; result: продукт, автоматизация, продажи, масштаб</div>
+          <div class="terminal-line">&gt; note: богатство начинается там, где <b>код и действие</b> работают вместе</div>
+        </div>
+
+        <div class="metric-grid">
+          <div class="metric">
+            <small>Фокус</small>
+            <strong>10x</strong>
+          </div>
+          <div class="metric">
+            <small>Инструменты</small>
+            <strong>2</strong>
+          </div>
+          <div class="metric">
+            <small>Режим</small>
+            <strong>24/7</strong>
+          </div>
+        </div>
+      </aside>
+    </section>
+
+    <div class="section-head" id="steps">
+      <h2>Протокол из 10 шагов</h2>
+      <p>Тональность, это хакерский future-style с упором на реальную пользу. Каждый шаг переводит тебя из режима исполнителя в режим архитектора денег.</p>
+    </div>
+
+    <section class="steps">
+      <article class="step">
+        <div class="step-number">01</div>
+        <h3>Выбери денежную нишу</h3>
+        <p>Не «что интересно», а где есть боль, деньги и срочность. Claude помогает быстро разбирать рынок, а OpenClaw помогает собирать всё в рабочий pipeline.</p>
+        <span class="tag">рынок</span>
+      </article>
+
+      <article class="step">
+        <div class="step-number">02</div>
+        <h3>Собери интеллект-стек</h3>
+        <p>Claude нужен как стратег, аналитик, редактор и архитектор решений. OpenClaw нужен как агентный слой, который умеет ходить в инструменты, автоматизировать и исполнять.</p>
+        <ul>
+          <li>Claude думает и проектирует</li>
+          <li>OpenClaw делает и связывает</li>
+        </ul>
+        <span class="tag">stack</span>
+      </article>
+
+      <article class="step">
+        <div class="step-number">03</div>
+        <h3>Упакуй сильный оффер</h3>
+        <p>Формулировка продаёт. Сделай обещание ясным: что именно человек получает, за сколько времени и почему это лучше альтернатив.</p>
+        <span class="tag">оффер</span>
+      </article>
+
+      <article class="step">
+        <div class="step-number">04</div>
+        <h3>Запусти MVP за дни, а не месяцы</h3>
+        <p>Сделай первую версию настолько быстрой, чтобы рынок начал отвечать уже на этой неделе. Богатые выигрывают за счёт скорости обратной связи.</p>
+        <span class="tag">mvp</span>
+      </article>
+
+      <article class="step">
+        <div class="step-number">05</div>
+        <h3>Автоматизируй всё, что повторяется</h3>
+        <p>Любая повторяющаяся задача должна превращаться либо в скрипт, либо в агента. Освобождённое время идёт в рост, а не в рутину.</p>
+        <span class="tag">automation</span>
+      </article>
+
+      <article class="step">
+        <div class="step-number">06</div>
+        <h3>Собери систему контента и продаж</h3>
+        <p>Claude помогает генерировать позиционирование, тексты, письма и сценарии, а OpenClaw превращает это в регулярную работающую машину присутствия и outreach.</p>
+        <span class="tag">sales</span>
+      </article>
+
+      <article class="step">
+        <div class="step-number">07</div>
+        <h3>Подними цены раньше, чем станет страшно</h3>
+        <p>Слишком дешёвый продукт выглядит слабым. Хороший AI-enabled сервис должен стоить как ускорение денег, а не как очередная подписка ради интереса.</p>
+        <span class="tag">pricing</span>
+      </article>
+
+      <article class="step">
+        <div class="step-number">08</div>
+        <h3>Масштабируй через агентов</h3>
+        <p>Один человек всегда упрётся в потолок. Агентные цепочки, ассистенты и инструменты позволяют расширять выпуск без пропорционального роста хаоса.</p>
+        <span class="tag">agents</span>
+      </article>
+
+      <article class="step">
+        <div class="step-number">09</div>
+        <h3>Построй медиа-образ и доверие</h3>
+        <p>Люди платят не только за функцию, но и за уверенность, что ты понимаешь рынок лучше остальных. Делай кейсы, публикуй разборы, показывай процесс.</p>
+        <span class="tag">trust</span>
+      </article>
+
+      <article class="step">
+        <div class="step-number">10</div>
+        <h3>Преврати доход в систему</h3>
+        <p>Успех, это не одна удачная сделка. Это повторяемая машина: привлечение, конверсия, исполнение, удержание, масштаб. И всё это усиливается Claude и OpenClaw.</p>
+        <span class="tag">wealth engine</span>
+      </article>
+    </section>
+
+    <div class="section-head" id="faq">
+      <h2>Вопросы без воды</h2>
+      <p>Ниже, самые частые сомнения людей, которые понимают, что эпоха AI уже началась, но ещё не до конца переключились в новый режим.</p>
+    </div>
+
+    <section class="faq">
+      <article class="faq-card">
+        <h3>Это про кодеров?</h3>
+        <p>Нет. Это про людей, которые готовы системно думать и быстро запускать. Код здесь нужен не всегда, но мышление билдера обязательно.</p>
+      </article>
+      <article class="faq-card">
+        <h3>Почему именно Claude?</h3>
+        <p>Потому что он силён в структуре, качестве формулировок, проектировании и аккуратной инженерной работе. Это хороший мозг для сложных задач.</p>
+      </article>
+      <article class="faq-card">
+        <h3>Почему именно OpenClaw?</h3>
+        <p>Потому что одного умного текста мало. Нужен слой, который реально ходит в инструменты, автоматизирует, связывает части системы и доводит до результата.</p>
+      </article>
+    </section>
+
+    <section class="cta">
+      <div>
+        <div class="eyebrow">Запуск режима builder</div>
+        <h2>Не мечтай о будущем. Собери его.</h2>
+        <p>Если ты уже понимаешь, что AI это не игрушка, то следующая стадия проста, использовать его не для разговоров, а для строительства активов, автоматизаций и бизнеса.</p>
+      </div>
+      <div class="cta-stack">
+        <div class="cta-item"><strong>Claude</strong> даёт мышление, структуру и качественное решение.</div>
+        <div class="cta-item"><strong>OpenClaw</strong> даёт действия, инструменты и связность системы.</div>
+        <div class="cta-item"><strong>Ты</strong> даёшь направление, риск и скорость исполнения.</div>
+      </div>
+    </section>
+
+    <footer>
+      <span class="scan">Protocol Wealth // Claude × OpenClaw</span>
+      <span>Собрано в futuristic IT-стиле • RU • test2</span>
+    </footer>
+  </div>
+</body>
+</html>
