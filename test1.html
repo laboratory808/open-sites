@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PROTOCOL_10 // Claude × OpenClaw</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700;800&family=Major+Mono+Display&family=VT323&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#070807;
+  --bg-2:#0c0f0c;
+  --ink:#d7e5d5;
+  --dim:#5a6a58;
+  --dimmer:#334032;
+  --acid:#00ff9d;
+  --acid-soft:rgba(0,255,157,.12);
+  --acid-glow:rgba(0,255,157,.35);
+  --hot:#ff2e6f;
+  --hot-soft:rgba(255,46,111,.12);
+  --amber:#ffb800;
+  --violet:#a56bff;
+  --line:rgba(0,255,157,.18);
+  --line-strong:rgba(0,255,157,.45);
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--bg);color:var(--ink);font-family:'JetBrains Mono',monospace;overflow-x:hidden}
+body{
+  font-size:14px;line-height:1.55;
+  background:
+    radial-gradient(ellipse 80% 50% at 20% 0%, rgba(0,255,157,.06), transparent 60%),
+    radial-gradient(ellipse 70% 60% at 100% 30%, rgba(255,46,111,.04), transparent 60%),
+    radial-gradient(ellipse 100% 60% at 50% 100%, rgba(165,107,255,.05), transparent 60%),
+    var(--bg);
+  min-height:100vh;
+}
+
+/* CRT scanlines */
+body::before{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:100;
+  background:repeating-linear-gradient(0deg,
+    rgba(0,0,0,0) 0px,
+    rgba(0,0,0,0) 2px,
+    rgba(0,0,0,.22) 3px,
+    rgba(0,0,0,0) 4px);
+  mix-blend-mode:multiply;opacity:.6;
+}
+/* Vignette */
+body::after{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:99;
+  background:radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,.55) 100%);
+}
+
+/* Matrix canvas */
+#matrix{position:fixed;inset:0;z-index:0;opacity:.35;pointer-events:none}
+
+/* Grid overlay */
+.grid-bg{
+  position:fixed;inset:0;z-index:1;pointer-events:none;
+  background-image:
+    linear-gradient(var(--line) 1px,transparent 1px),
+    linear-gradient(90deg,var(--line) 1px,transparent 1px);
+  background-size:64px 64px;
+  mask-image:radial-gradient(ellipse at center, black 30%, transparent 80%);
+  -webkit-mask-image:radial-gradient(ellipse at center, black 30%, transparent 80%);
+  opacity:.35;
+}
+
+.wrap{position:relative;z-index:10;max-width:1360px;margin:0 auto;padding:0 32px}
+
+/* ---------- TOP BAR ---------- */
+.topbar{
+  position:sticky;top:0;z-index:50;
+  display:flex;align-items:center;gap:16px;
+  padding:10px 32px;
+  background:rgba(7,8,7,.85);backdrop-filter:blur(8px);
+  border-bottom:1px solid var(--line);
+  font-size:11px;letter-spacing:.12em;text-transform:uppercase;
+}
+.topbar .dot{width:8px;height:8px;border-radius:50%;background:var(--acid);box-shadow:0 0 10px var(--acid-glow);animation:pulse 1.5s ease-in-out infinite}
+.topbar .sep{color:var(--dimmer)}
+.topbar .muted{color:var(--dim)}
+.topbar .end{margin-left:auto;display:flex;gap:16px;align-items:center}
+.topbar .end span{color:var(--dim)}
+.topbar .end b{color:var(--acid);font-weight:500}
+
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.85)}}
+
+/* ---------- HERO ---------- */
+.hero{
+  position:relative;padding:88px 0 56px;
+}
+.hero .tag{
+  display:inline-flex;align-items:center;gap:10px;
+  padding:6px 14px;border:1px solid var(--line-strong);
+  color:var(--acid);font-size:11px;letter-spacing:.25em;text-transform:uppercase;
+  background:var(--acid-soft);
+  margin-bottom:28px;
+  position:relative;
+}
+.hero .tag::before{content:"◉";color:var(--hot)}
+.hero .tag::after{
+  content:"";position:absolute;top:-4px;right:-4px;width:8px;height:8px;
+  background:var(--acid);box-shadow:0 0 8px var(--acid-glow);
+}
+
+.hero h1{
+  font-family:'Major Mono Display',monospace;
+  font-weight:400;
+  font-size:clamp(44px,8.5vw,132px);
+  line-height:.92;
+  letter-spacing:-.02em;
+  color:var(--ink);
+  text-transform:lowercase;
+  margin-bottom:8px;
+  position:relative;
+}
+.hero h1 .slash{color:var(--acid);display:inline-block;transform:translateY(-.05em)}
+.hero h1 .hot{color:var(--hot)}
+.hero h1 .glitch{
+  display:inline-block;position:relative;
+}
+.hero h1 .glitch::before,.hero h1 .glitch::after{
+  content:attr(data-text);position:absolute;top:0;left:0;width:100%;
+  background:var(--bg);
+}
+.hero h1 .glitch::before{color:var(--hot);animation:glitch1 4s infinite linear alternate}
+.hero h1 .glitch::after{color:var(--acid);animation:glitch2 3.2s infinite linear alternate}
+@keyframes glitch1{
+  0%,94%,100%{clip-path:inset(100% 0 0 0);transform:translate(0,0)}
+  95%{clip-path:inset(20% 0 60% 0);transform:translate(2px,-1px)}
+  97%{clip-path:inset(60% 0 20% 0);transform:translate(-2px,1px)}
+}
+@keyframes glitch2{
+  0%,93%,100%{clip-path:inset(100% 0 0 0);transform:translate(0,0)}
+  94%{clip-path:inset(40% 0 40% 0);transform:translate(-3px,0)}
+  96%{clip-path:inset(10% 0 70% 0);transform:translate(3px,1px)}
+}
+
+.hero h2{
+  font-family:'JetBrains Mono',monospace;font-weight:400;
+  font-size:clamp(14px,1.4vw,18px);
+  color:var(--dim);max-width:680px;
+  margin-top:28px;line-height:1.7;
+  letter-spacing:.02em;
+}
+.hero h2 em{font-style:normal;color:var(--ink);background:var(--acid-soft);padding:1px 6px;border-left:2px solid var(--acid)}
+
+.hero .prompt-line{
+  margin-top:36px;display:flex;align-items:center;gap:10px;
+  font-family:'JetBrains Mono',monospace;font-size:13px;
+  color:var(--dim);
+}
+.hero .prompt-line .arrow{color:var(--acid)}
+.hero .prompt-line .typed{color:var(--ink)}
+.hero .prompt-line .cursor{
+  display:inline-block;width:9px;height:16px;background:var(--acid);
+  animation:blink 1s steps(1) infinite;
+  box-shadow:0 0 6px var(--acid-glow);margin-left:2px;
+}
+@keyframes blink{0%,49%{opacity:1}50%,100%{opacity:0}}
+
+.hero-cta{
+  margin-top:40px;display:flex;gap:14px;flex-wrap:wrap;align-items:center;
+}
+.btn{
+  display:inline-flex;align-items:center;gap:10px;
+  padding:14px 22px;border:1px solid var(--acid);
+  background:transparent;color:var(--acid);
+  font-family:'JetBrains Mono',monospace;font-weight:500;
+  font-size:12px;letter-spacing:.22em;text-transform:uppercase;
+  cursor:pointer;transition:all .2s;
+  position:relative;text-decoration:none;
+  clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,10px 100%,0 calc(100% - 10px));
+}
+.btn:hover{background:var(--acid);color:var(--bg);box-shadow:0 0 30px var(--acid-glow)}
+.btn.ghost{border-color:var(--dim);color:var(--dim)}
+.btn.ghost:hover{border-color:var(--ink);color:var(--ink);background:transparent;box-shadow:none}
+.btn .k{color:var(--hot);margin-right:4px}
+
+/* ASCII block floating */
+.ascii-float{
+  position:absolute;right:32px;top:130px;
+  font-size:10px;line-height:1.05;color:var(--dimmer);
+  white-space:pre;user-select:none;pointer-events:none;
+  opacity:.55;display:none;
+}
+@media(min-width:1100px){.ascii-float{display:block}}
+
+/* ---------- STATS STRIP ---------- */
+.stats{
+  margin:32px 0 0;
+  display:grid;grid-template-columns:repeat(4,1fr);
+  border:1px solid var(--line);border-bottom:2px solid var(--acid);
+  background:rgba(12,15,12,.6);
+}
+.stats .cell{padding:22px 20px;border-right:1px solid var(--line);position:relative}
+.stats .cell:last-child{border-right:none}
+.stats .label{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim)}
+.stats .val{font-family:'Major Mono Display',monospace;font-size:36px;color:var(--ink);margin-top:6px;line-height:1}
+.stats .val .unit{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--acid);margin-left:4px}
+.stats .delta{font-size:10px;margin-top:8px;color:var(--acid)}
+.stats .delta.hot{color:var(--hot)}
+
+/* ---------- SECTION HEAD ---------- */
+.sec-head{
+  margin:96px 0 32px;
+  display:flex;align-items:flex-end;gap:20px;justify-content:space-between;
+  border-bottom:1px dashed var(--line);padding-bottom:18px;
+}
+.sec-head h3{
+  font-family:'Major Mono Display',monospace;font-weight:400;
+  font-size:clamp(28px,4vw,56px);color:var(--ink);
+  text-transform:lowercase;letter-spacing:-.01em;line-height:1;
+}
+.sec-head h3 span{color:var(--acid)}
+.sec-head .meta{color:var(--dim);font-size:11px;text-transform:uppercase;letter-spacing:.2em}
+.sec-head .meta b{color:var(--hot);font-weight:500}
+
+/* ---------- STEPS ---------- */
+.protocol{
+  display:grid;grid-template-columns:repeat(12,1fr);gap:24px;
+  margin-bottom:80px;
+}
+
+.step{
+  position:relative;
+  background:linear-gradient(180deg,rgba(12,15,12,.85),rgba(7,8,7,.85));
+  border:1px solid var(--line);
+  padding:28px 26px;
+  grid-column:span 6;
+  transition:border-color .25s, transform .25s;
+}
+.step:hover{border-color:var(--acid);transform:translateY(-2px)}
+.step::before{
+  content:"";position:absolute;top:0;left:0;height:1px;width:0;background:var(--acid);
+  transition:width .6s ease;
+}
+.step:hover::before{width:100%}
+/* asymmetric grid — some steps offset */
+.step:nth-child(1){grid-column:1/span 7}
+.step:nth-child(2){grid-column:8/span 5}
+.step:nth-child(3){grid-column:1/span 5}
+.step:nth-child(4){grid-column:6/span 7}
+.step:nth-child(5){grid-column:1/span 6}
+.step:nth-child(6){grid-column:7/span 6}
+.step:nth-child(7){grid-column:1/span 8}
+.step:nth-child(8){grid-column:9/span 4}
+.step:nth-child(9){grid-column:1/span 4}
+.step:nth-child(10){grid-column:5/span 8}
+
+.step .win{
+  display:flex;align-items:center;gap:8px;
+  margin:-28px -26px 20px;padding:10px 18px;
+  border-bottom:1px solid var(--line);
+  background:rgba(0,0,0,.35);
+  font-size:11px;color:var(--dim);letter-spacing:.1em;
+}
+.step .win .d{width:10px;height:10px;border-radius:50%;border:1px solid var(--dim)}
+.step .win .d.r{background:rgba(255,46,111,.5);border-color:var(--hot)}
+.step .win .d.y{background:rgba(255,184,0,.5);border-color:var(--amber)}
+.step .win .d.g{background:rgba(0,255,157,.5);border-color:var(--acid)}
+.step .win .file{margin-left:auto;color:var(--dim)}
+
+.step .num{
+  font-family:'Major Mono Display',monospace;
+  font-size:82px;line-height:1;color:var(--dimmer);
+  position:absolute;right:22px;top:60px;
+  letter-spacing:-.05em;pointer-events:none;
+}
+.step:hover .num{color:var(--acid-soft);text-shadow:0 0 20px var(--acid-glow)}
+
+.step .cmd{
+  font-family:'JetBrains Mono',monospace;font-size:12px;
+  color:var(--acid);letter-spacing:.02em;margin-bottom:12px;
+}
+.step .cmd::before{content:"$ ";color:var(--hot)}
+
+.step h4{
+  font-family:'JetBrains Mono',monospace;font-weight:800;
+  font-size:clamp(18px,1.8vw,24px);text-transform:uppercase;
+  letter-spacing:.02em;color:var(--ink);line-height:1.15;
+  margin-bottom:14px;max-width:85%;
+}
+
+.step p{
+  color:var(--dim);font-size:13.5px;line-height:1.7;margin-bottom:14px;
+  max-width:58ch;
+}
+.step p em{font-style:normal;color:var(--ink);background:rgba(255,46,111,.1);padding:0 4px;border-bottom:1px solid var(--hot)}
+
+.step .bar{
+  display:flex;align-items:center;gap:10px;
+  font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:.15em;
+  margin-top:18px;padding-top:14px;border-top:1px dashed var(--dimmer);
+}
+.step .bar .track{
+  flex:1;height:4px;background:var(--dimmer);position:relative;overflow:hidden;
+}
+.step .bar .fill{
+  position:absolute;left:0;top:0;bottom:0;background:var(--acid);
+  box-shadow:0 0 8px var(--acid-glow);
+  animation:fill 2.4s ease-out forwards;transform-origin:left;
+}
+@keyframes fill{from{width:0}}
+.step .bar .pct{color:var(--acid);font-weight:500;min-width:40px;text-align:right}
+
+.step .tags{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.step .tags span{
+  font-size:10px;padding:3px 8px;
+  background:rgba(0,255,157,.06);border:1px solid var(--line);
+  color:var(--acid);letter-spacing:.1em;text-transform:uppercase;
+}
+.step .tags span.hot{background:rgba(255,46,111,.08);border-color:rgba(255,46,111,.35);color:var(--hot)}
+
+/* Callout variant for the final step */
+.step.final{
+  background:linear-gradient(135deg,rgba(255,46,111,.08),rgba(0,255,157,.05));
+  border-color:var(--hot);
+}
+.step.final h4{color:var(--hot)}
+.step.final .num{color:rgba(255,46,111,.18)}
+.step.final .bar .fill{background:var(--hot);box-shadow:0 0 8px rgba(255,46,111,.5)}
+.step.final .cmd{color:var(--hot)}
+.step.final .cmd::before{color:var(--acid)}
+
+/* ---------- TERMINAL LOG ---------- */
+.log{
+  margin:64px 0 0;
+  background:#050605;border:1px solid var(--line);
+  font-family:'JetBrains Mono',monospace;
+  padding:24px 28px;
+  max-height:280px;overflow:hidden;position:relative;
+}
+.log::after{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(180deg,transparent 60%,#050605 100%);
+}
+.log .head{
+  font-size:10px;letter-spacing:.2em;color:var(--dim);text-transform:uppercase;
+  margin-bottom:14px;display:flex;gap:12px;
+}
+.log .head .live{color:var(--acid)}
+.log .line{font-size:12px;color:var(--dim);margin-bottom:4px}
+.log .line .time{color:var(--dimmer);margin-right:10px}
+.log .line .tag{color:var(--acid);margin-right:8px}
+.log .line .tag.warn{color:var(--amber)}
+.log .line .tag.err{color:var(--hot)}
+.log .line .msg{color:var(--ink)}
+.log .line .q{color:var(--violet)}
+
+/* ---------- FAQ ---------- */
+.faq{margin-top:64px;display:grid;grid-template-columns:repeat(2,1fr);gap:24px}
+.q{
+  border:1px solid var(--line);padding:22px 24px;
+  background:rgba(12,15,12,.5);position:relative;
+}
+.q::before{
+  content:"?";position:absolute;right:18px;top:12px;
+  font-family:'Major Mono Display',monospace;font-size:42px;color:var(--acid-soft);
+}
+.q h5{
+  font-family:'JetBrains Mono',monospace;font-weight:700;
+  font-size:15px;color:var(--ink);text-transform:uppercase;letter-spacing:.02em;
+  margin-bottom:10px;max-width:90%;
+}
+.q p{color:var(--dim);font-size:13px;line-height:1.7}
+.q p b{color:var(--acid);font-weight:500}
+
+/* ---------- CTA ---------- */
+.final-cta{
+  margin:96px 0 60px;padding:60px 40px;
+  border:1px solid var(--acid);
+  background:
+    radial-gradient(ellipse at 0% 50%, rgba(0,255,157,.12), transparent 60%),
+    radial-gradient(ellipse at 100% 50%, rgba(255,46,111,.1), transparent 60%),
+    rgba(7,8,7,.7);
+  text-align:center;position:relative;
+  clip-path:polygon(0 0,calc(100% - 24px) 0,100% 24px,100% 100%,24px 100%,0 calc(100% - 24px));
+}
+.final-cta .eyebrow{
+  font-size:11px;letter-spacing:.3em;color:var(--acid);text-transform:uppercase;
+  margin-bottom:16px;
+}
+.final-cta h3{
+  font-family:'Major Mono Display',monospace;font-weight:400;
+  font-size:clamp(32px,4.5vw,64px);text-transform:lowercase;
+  line-height:.95;color:var(--ink);margin-bottom:20px;
+}
+.final-cta h3 span{color:var(--acid)}
+.final-cta p{color:var(--dim);max-width:580px;margin:0 auto 32px;font-size:14px;line-height:1.7}
+.final-cta .buttons{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+
+/* ---------- FOOTER ---------- */
+footer{
+  border-top:1px solid var(--line);padding:40px 0 60px;
+  color:var(--dim);font-size:11px;letter-spacing:.15em;
+}
+footer .ascii{
+  font-family:'JetBrains Mono',monospace;font-size:10px;line-height:1.15;
+  color:var(--dimmer);white-space:pre;margin-bottom:24px;overflow-x:auto;
+}
+footer .bottom{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;text-transform:uppercase}
+footer .bottom b{color:var(--acid);font-weight:500}
+footer .bottom a{color:var(--dim);text-decoration:none;border-bottom:1px dashed var(--dimmer)}
+footer .bottom a:hover{color:var(--acid);border-color:var(--acid)}
+
+/* Responsive collapse */
+@media (max-width:980px){
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .stats .cell:nth-child(2){border-right:none}
+  .stats .cell:nth-child(1),.stats .cell:nth-child(2){border-bottom:1px solid var(--line)}
+  .protocol{grid-template-columns:1fr;gap:16px}
+  .step,.step:nth-child(n){grid-column:1}
+  .step .num{font-size:60px;top:40px;right:16px}
+  .faq{grid-template-columns:1fr}
+  .hero h1{font-size:56px}
+  .ascii-float{display:none}
+  .wrap{padding:0 20px}
+  .topbar{padding:10px 20px;gap:10px;font-size:10px}
+  .topbar .end .hide-mob{display:none}
+}
+
+/* Reveal */
+[data-reveal]{opacity:0;transform:translateY(14px);transition:opacity .7s ease, transform .7s ease}
+[data-reveal].on{opacity:1;transform:none}
+
+/* Noise overlay */
+.noise{
+  position:fixed;inset:0;z-index:98;pointer-events:none;opacity:.04;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.5 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}
+
+::selection{background:var(--acid);color:var(--bg)}
+</style>
+</head>
+<body>
+
+<canvas id="matrix"></canvas>
+<div class="grid-bg"></div>
+<div class="noise"></div>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <span class="dot"></span>
+  <span>SYSTEM<span class="muted">::</span><b style="color:var(--acid)">ONLINE</b></span>
+  <span class="sep">│</span>
+  <span class="muted">node//openclaw-07.almaty</span>
+  <span class="sep">│</span>
+  <span class="muted" id="uptime">uptime 00:00:00</span>
+  <div class="end">
+    <span class="hide-mob">latency <b>12ms</b></span>
+    <span class="hide-mob">agents <b>1,337</b></span>
+    <span>v4.7.0</span>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <!-- HERO -->
+  <section class="hero">
+    <pre class="ascii-float">
+  ╔═══════════════════╗
+  ║ // auth: granted  ║
+  ║ // key: *********  ║
+  ║ // tier: apex     ║
+  ╠═══════════════════╣
+  ║ &gt; loading matrix  ║
+  ║ &gt; forking reality ║
+  ║ &gt; stacking btc    ║
+  ╚═══════════════════╝
+       │
+       ▼
+     [ run ]
+    </pre>
+
+    <div class="tag">CLASSIFIED <span style="color:var(--dim)">//</span> PROTOCOL_10</div>
+    <h1>
+      как<span class="slash">/</span>стать<br>
+      <span class="glitch" data-text="богатым">богатым</span><span class="hot">.</span>
+    </h1>
+    <h2>
+      Десятишаговый манифест для тех, кто <em>устал кодить чужое</em>.
+      Без курсов за 149 000₸, без вебинаров, без инфоцыган.
+      Только <em>Claude</em>, только <em>OpenClaw</em>, только выжимка того,
+      что реально работает в 2026 году.
+    </h2>
+
+    <div class="prompt-line">
+      <span class="arrow">&gt;</span>
+      <span>claude run <span class="typed" id="typed"></span><span class="cursor"></span></span>
+    </div>
+
+    <div class="hero-cta">
+      <a href="#step-01" class="btn"><span class="k">$</span>начать протокол</a>
+      <a href="#feedback" class="btn ghost">// посмотреть логи</a>
+    </div>
+  </section>
+
+  <!-- STATS -->
+  <section class="stats" data-reveal>
+    <div class="cell">
+      <div class="label">Активных операторов</div>
+      <div class="val">13.4<span class="unit">K</span></div>
+      <div class="delta">▲ +428 за 24ч</div>
+    </div>
+    <div class="cell">
+      <div class="label">Сгенерировано ₸</div>
+      <div class="val">2.1<span class="unit">млрд</span></div>
+      <div class="delta">▲ +18.2% MoM</div>
+    </div>
+    <div class="cell">
+      <div class="label">Токенов сожжено</div>
+      <div class="val">89.7<span class="unit">B</span></div>
+      <div class="delta hot">▲ out of budget</div>
+    </div>
+    <div class="cell">
+      <div class="label">Успех протокола</div>
+      <div class="val">94.2<span class="unit">%</span></div>
+      <div class="delta">// стат. на доверии</div>
+    </div>
+  </section>
+
+  <!-- PROTOCOL -->
+  <div class="sec-head" data-reveal>
+    <h3>/протокол<span>_10</span></h3>
+    <div class="meta">десять шагов <b>// от стажёра до экзита</b></div>
+  </div>
+
+  <section class="protocol">
+
+    <article class="step" id="step-01" data-reveal>
+      <div class="win"><span class="d r"></span><span class="d y"></span><span class="d g"></span><span class="file">~/init/claude.sh</span></div>
+      <div class="num">01</div>
+      <div class="cmd">claude --init --region=apex</div>
+      <h4>Инициализация</h4>
+      <p>Подними <em>Claude</em>. Подключи аккаунт. Это не «ещё один тул» — это твой новый ко-фаундер, который не требует долей, не спит и не ноет. Без него ты всё ещё в ловушке <em>9-to-5</em>.</p>
+      <div class="tags"><span>claude.ai</span><span>api-key</span><span class="hot">critical</span></div>
+      <div class="bar"><span>readiness</span><div class="track"><div class="fill" style="width:100%"></div></div><span class="pct">100%</span></div>
+    </article>
+
+    <article class="step" data-reveal>
+      <div class="win"><span class="d r"></span><span class="d y"></span><span class="d g"></span><span class="file">~/skills/prompt.md</span></div>
+      <div class="num">02</div>
+      <div class="cmd">prompt --hack --engineer</div>
+      <h4>Взлом промпта</h4>
+      <p>Забудь «пожалуйста, напиши». Пиши как инженер: <em>роль → контекст → ограничения → формат</em>. Промпт — это код. Плохой промпт — это баг.</p>
+      <div class="tags"><span>xml</span><span>few-shot</span><span>chain-of-thought</span></div>
+      <div class="bar"><span>skill</span><div class="track"><div class="fill" style="width:92%"></div></div><span class="pct">92%</span></div>
+    </article>
+
+    <article class="step" data-reveal>
+      <div class="win"><span class="d r"></span><span class="d y"></span><span class="d g"></span><span class="file">~/openclaw/connect.py</span></div>
+      <div class="num">03</div>
+      <div class="cmd">openclaw.connect(mode="apex")</div>
+      <h4>OpenClaw::Access</h4>
+      <p><em>OpenClaw</em> — твоя когтистая лапа в API. Инструменты, вызовы функций, агентные циклы. Здесь заканчивается чат и начинается <em>автоматизация дохода</em>.</p>
+      <div class="tags"><span>tool-use</span><span>mcp</span><span>agents</span></div>
+      <div class="bar"><span>integration</span><div class="track"><div class="fill" style="width:85%"></div></div><span class="pct">85%</span></div>
+    </article>
+
+    <article class="step" data-reveal>
+      <div class="win"><span class="d r"></span><span class="d y"></span><span class="d g"></span><span class="file">/etc/cron.daily/you.sh</span></div>
+      <div class="num">04</div>
+      <div class="cmd">cron --daemon --replace-self</div>
+      <h4>Автоматизация рутины</h4>
+      <p>Задача, которую ты делаешь дважды — это скрипт. Три раза — это агент. Пять раз — это уже <em>SaaS</em> с платящими клиентами. Правило работает без исключений.</p>
+      <div class="tags"><span>python</span><span>zapier-killer</span><span>n8n</span></div>
+      <div class="bar"><span>leverage</span><div class="track"><div class="fill" style="width:78%"></div></div><span class="pct">78%</span></div>
+    </article>
+
+    <article class="step" data-reveal>
+      <div class="win"><span class="d r"></span><span class="d y"></span><span class="d g"></span><span class="file">/ship/mvp-v0.tsx</span></div>
+      <div class="num">05</div>
+      <div class="cmd">ship --fast --ugly --now</div>
+      <h4>Первый MVP</h4>
+      <p>Лендинг за ночь. Прототип за выходные. Первый клиент — в пятницу. <em>Перфекционизм — это форма прокрастинации</em>. Красиво будет потом. Деньги нужны сейчас.</p>
+      <div class="tags"><span>claude-code</span><span>next.js</span><span>stripe</span></div>
+      <div class="bar"><span>velocity</span><div class="track"><div class="fill" style="width:88%"></div></div><span class="pct">88%</span></div>
+    </article>
+
+    <article class="step" data-reveal>
+      <div class="win"><span class="d r"></span><span class="d y"></span><span class="d g"></span><span class="file">~/swarm/spawn.sh</span></div>
+      <div class="num">06</div>
+      <div class="cmd">spawn --agents=100 --parallel</div>
+      <h4>Армия агентов</h4>
+      <p>Один Claude — это сила одного разработчика. Сто агентов в параллельной оркестрации — это <em>стартап без зарплатного фонда</em>. Твоя роль меняется: из исполнителя в архитектора.</p>
+      <div class="tags"><span>orchestrator</span><span>subagents</span><span>parallel</span></div>
+      <div class="bar"><span>throughput</span><div class="track"><div class="fill" style="width:96%"></div></div><span class="pct">96%</span></div>
+    </article>
+
+    <article class="step" data-reveal>
+      <div class="win"><span class="d r"></span><span class="d y"></span><span class="d g"></span><span class="file">/billing/stripe.cfg</span></div>
+      <div class="num">07</div>
+      <div class="cmd">stripe --enable --raise-price x2</div>
+      <h4>Монетизация</h4>
+      <p>Бесплатно — это мёртвый продукт без фидбека. Ставь прайс. Подними. Ещё раз подними. <em>Если никто не жалуется на цену — она слишком низкая</em>. Если все уходят — тоже.</p>
+      <div class="tags"><span>stripe</span><span>usage-based</span><span class="hot">раз в месяц</span></div>
+      <div class="bar"><span>margin</span><div class="track"><div class="fill" style="width:82%"></div></div><span class="pct">82%</span></div>
+    </article>
+
+    <article class="step" data-reveal>
+      <div class="win"><span class="d r"></span><span class="d y"></span><span class="d g"></span><span class="file">~/infra/k8s.yaml</span></div>
+      <div class="num">08</div>
+      <div class="cmd">scale --horizontal</div>
+      <h4>Масштабирование</h4>
+      <p>Один клиент — удача. Сто — бизнес. Тысяча — архитектуру уже надо переписывать. Готовься заранее: кэш, очереди, rate-limits. <em>Success kills product faster than failure</em>.</p>
+      <div class="tags"><span>kubernetes</span><span>redis</span><span>queues</span></div>
+      <div class="bar"><span>load</span><div class="track"><div class="fill" style="width:71%"></div></div><span class="pct">71%</span></div>
+    </article>
+
+    <article class="step" data-reveal>
+      <div class="win"><span class="d r"></span><span class="d y"></span><span class="d g"></span><span class="file">~/moat/ecosystem.ts</span></div>
+      <div class="num">09</div>
+      <div class="cmd">ecosystem.deploy()</div>
+      <h4>Экосистема</h4>
+      <p>Продукт → сообщество → курс → агентство → инвестиции. Каждый слой <em>кормит</em> следующий. Это не воронка — это корневая система. Конкуренту надо выкорчёвывать всё сразу.</p>
+      <div class="tags"><span>discord</span><span>newsletter</span><span>partnerships</span></div>
+      <div class="bar"><span>moat</span><div class="track"><div class="fill" style="width:65%"></div></div><span class="pct">65%</span></div>
+    </article>
+
+    <article class="step final" data-reveal>
+      <div class="win"><span class="d r"></span><span class="d y"></span><span class="d g"></span><span class="file">~/exit.sh</span></div>
+      <div class="num">10</div>
+      <div class="cmd">exit(0) // или push дальше</div>
+      <h4>Экзит или бесконечность</h4>
+      <p>Точка выбора. Продать компанию и купить дом на Бали. Или забить на экзит и построить <em>империю</em>. Оба варианта — победа. Единственный проигрыш — остаться в точке 00, читая этот сайт и не кликая «начать».</p>
+      <div class="tags"><span class="hot">freedom</span><span>bali-optional</span><span>empire-mode</span></div>
+      <div class="bar"><span>liberation</span><div class="track"><div class="fill" style="width:99%"></div></div><span class="pct">99%</span></div>
+    </article>
+
+  </section>
+
+  <!-- LOG -->
+  <div class="sec-head" id="feedback" data-reveal>
+    <h3>~/<span>feedback</span>.log</h3>
+    <div class="meta">LIVE STREAM <b>// tail -f</b></div>
+  </div>
+
+  <div class="log" data-reveal>
+    <div class="head"><span class="live">● LIVE</span><span>// последние 24ч</span><span>// ∞ записей</span></div>
+    <div class="line"><span class="time">04:12:07</span><span class="tag">[OK]</span><span class="q">@dauren_k:</span> <span class="msg">шаг 05 сработал. лендос ночью, клиент утром. wtf</span></div>
+    <div class="line"><span class="time">04:12:31</span><span class="tag">[OK]</span><span class="q">@alina.ux:</span> <span class="msg">ушла из найма на шаге 07. не вернусь.</span></div>
+    <div class="line"><span class="time">04:13:02</span><span class="tag warn">[WARN]</span><span class="q">@serik.dev:</span> <span class="msg">шаг 06 дорогой. токены горят. но ROI x4</span></div>
+    <div class="line"><span class="time">04:13:44</span><span class="tag">[OK]</span><span class="q">@zhanibek:</span> <span class="msg">поднял цену в 3 раза. никто не ушёл. зря боялся</span></div>
+    <div class="line"><span class="time">04:14:10</span><span class="tag err">[ERR]</span><span class="q">@__anonymous:</span> <span class="msg">застрял на шаге 02. промпты — это отдельная боль</span></div>
+    <div class="line"><span class="time">04:14:55</span><span class="tag">[OK]</span><span class="q">@maratai:</span> <span class="msg">экзит на шаге 10. бали подтверждаю. wifi норм.</span></div>
+    <div class="line"><span class="time">04:15:12</span><span class="tag">[OK]</span><span class="q">@ainura.ai:</span> <span class="msg">openclaw сэкономил мне разработчика. буквально.</span></div>
+    <div class="line"><span class="time">04:15:39</span><span class="tag warn">[WARN]</span><span class="q">@bagzhan:</span> <span class="msg">шаг 04 опасен. ты начинаешь видеть скрипты везде</span></div>
+  </div>
+
+  <!-- FAQ -->
+  <div class="sec-head" data-reveal>
+    <h3>/частые<span>_вопросы</span></h3>
+    <div class="meta">FAQ <b>// v4.7</b></div>
+  </div>
+
+  <section class="faq">
+    <div class="q" data-reveal>
+      <h5>А если я гуманитарий?</h5>
+      <p>Значит у тебя <b>преимущество</b>. Промпт — это не код, это <b>формулировка задачи</b>. Инженеры годами учатся писать ТЗ. Ты это уже умеешь, если умеешь объяснять маме, что ты делаешь на работе.</p>
+    </div>
+    <div class="q" data-reveal>
+      <h5>Сколько денег нужно для старта?</h5>
+      <p>Подписка на Claude Pro, ноутбук, домен за $10 и кофе. Всё остальное — <b>токсичное оправдание</b>, чтобы не начинать. Первый клиент окупит стек за день.</p>
+    </div>
+    <div class="q" data-reveal>
+      <h5>Это не пирамида?</h5>
+      <p>Нет. Тебе никто ничего не продаёт (пока). Никто не просит привести друзей. На странице <b>ноль регистраций</b>. Это манифест, а не воронка. Хотя воронку бы стоило прикрутить — см. шаг 05.</p>
+    </div>
+    <div class="q" data-reveal>
+      <h5>А если всё это — хайп?</h5>
+      <p>Возможно. Но <b>хайп длиной в десятилетие</b> называется сменой эпохи. Можешь подождать, пока всё «устаканится». К тому моменту тебя уже обгонят соседи, которые не ждали.</p>
+    </div>
+  </section>
+
+  <!-- FINAL CTA -->
+  <section class="final-cta" data-reveal>
+    <div class="eyebrow">// конец протокола</div>
+    <h3>выбор<span>:</span> начать<br>или <span>закрыть вкладку</span></h3>
+    <p>Этот сайт — не услуга. Не курс. Не подписка. Это просто карта. Выполнять протокол или нет — решаешь ты. Но <strong style="color:var(--ink)">время идёт в одну сторону</strong>, и токены каждый день дешевеют.</p>
+    <div class="buttons">
+      <a href="#step-01" class="btn"><span class="k">▲</span>запустить с шага 01</a>
+      <a href="#feedback" class="btn ghost">посмотреть кейсы</a>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <pre class="ascii">
+   ██████╗ ██████╗  ██████╗ ████████╗ ██████╗  ██████╗ ██████╗ ██╗         ██╗ ██████╗ 
+   ██╔══██╗██╔══██╗██╔═══██╗╚══██╔══╝██╔═══██╗██╔════╝██╔═══██╗██║        ███║██╔═████╗
+   ██████╔╝██████╔╝██║   ██║   ██║   ██║   ██║██║     ██║   ██║██║        ╚██║██║██╔██║
+   ██╔═══╝ ██╔══██╗██║   ██║   ██║   ██║   ██║██║     ██║   ██║██║         ██║████╔╝██║
+   ██║     ██║  ██║╚██████╔╝   ██║   ╚██████╔╝╚██████╗╚██████╔╝███████╗    ██║╚██████╔╝
+   ╚═╝     ╚═╝  ╚═╝ ╚═════╝    ╚═╝    ╚═════╝  ╚═════╝ ╚═════╝ ╚══════╝    ╚═╝ ╚═════╝ </pre>
+    <div class="bottom">
+      <span>© 2026 // <b>PROTOCOL_10</b> // не является финансовой рекомендацией</span>
+      <span>powered by <b>claude × openclaw</b></span>
+      <span><a href="#top">[ scroll_to_top ]</a></span>
+    </div>
+  </footer>
+
+</div>
+
+<script>
+/* ---------- Matrix rain ---------- */
+(function(){
+  const canvas = document.getElementById('matrix');
+  const ctx = canvas.getContext('2d');
+  let w, h, cols, drops;
+  const chars = 'アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン01{}[]<>/\\|ΣΛΩΞ';
+  function resize(){
+    w = canvas.width = window.innerWidth;
+    h = canvas.height = window.innerHeight;
+    cols = Math.floor(w / 16);
+    drops = Array(cols).fill(0).map(()=>Math.random()*h/16);
+  }
+  resize();
+  window.addEventListener('resize',resize);
+  function draw(){
+    ctx.fillStyle = 'rgba(7,8,7,0.08)';
+    ctx.fillRect(0,0,w,h);
+    ctx.font = '14px JetBrains Mono, monospace';
+    for(let i=0;i<cols;i++){
+      const ch = chars[Math.floor(Math.random()*chars.length)];
+      const x = i*16;
+      const y = drops[i]*16;
+      const isHead = Math.random() > 0.985;
+      ctx.fillStyle = isHead ? '#d7e5d5' : (Math.random()>0.92 ? '#00ff9d' : '#0f5a3c');
+      ctx.fillText(ch, x, y);
+      if(y > h && Math.random() > 0.975) drops[i] = 0;
+      drops[i] += 0.6;
+    }
+  }
+  setInterval(draw, 60);
+})();
+
+/* ---------- Uptime counter ---------- */
+(function(){
+  const el = document.getElementById('uptime');
+  const start = Date.now();
+  const base = 72*3600 + 14*60; // fake starting uptime
+  function tick(){
+    const s = base + Math.floor((Date.now()-start)/1000);
+    const hh = String(Math.floor(s/3600)).padStart(2,'0');
+    const mm = String(Math.floor((s%3600)/60)).padStart(2,'0');
+    const ss = String(s%60).padStart(2,'0');
+    el.textContent = `uptime ${hh}:${mm}:${ss}`;
+  }
+  tick(); setInterval(tick, 1000);
+})();
+
+/* ---------- Typed hero prompt ---------- */
+(function(){
+  const el = document.getElementById('typed');
+  const sequence = ['protocol_10.sh','become_rich.py','openclaw --apex','exit_9_to_5()'];
+  let i = 0, j = 0, dir = 1;
+  function loop(){
+    const current = sequence[i];
+    if(dir === 1){
+      j++;
+      if(j > current.length){ dir = -1; setTimeout(loop, 1400); return; }
+    } else {
+      j--;
+      if(j < 0){ dir = 1; i = (i+1) % sequence.length; }
+    }
+    el.textContent = current.substring(0,j);
+    setTimeout(loop, dir===1 ? 70 : 40);
+  }
+  loop();
+})();
+
+/* ---------- Reveal on scroll ---------- */
+(function(){
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(e => { if(e.isIntersecting){ e.target.classList.add('on'); io.unobserve(e.target); } });
+  }, {threshold: 0.08});
+  document.querySelectorAll('[data-reveal]').forEach((el,idx)=>{
+    el.style.transitionDelay = (idx%3)*80 + 'ms';
+    io.observe(el);
+  });
+})();
+
+/* ---------- Console easter egg ---------- */
+console.log('%c PROTOCOL_10 ', 'background:#00ff9d;color:#070807;font-weight:bold;padding:4px 8px;font-family:monospace');
+console.log('%c > вы смотрите консоль. уже шаг 00.5. неплохо.', 'color:#00ff9d;font-family:monospace');
+console.log('%c > claude --init чтобы начать', 'color:#5a6a58;font-family:monospace');
+</script>
+</body>
+</html>
