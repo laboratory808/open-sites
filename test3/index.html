@@ -119,32 +119,13 @@
       setStatus('Обработка...');
 
       try {
-        const response = await fetch(`${BACKEND_BASE}/download?url=${encodeURIComponent(url)}&pin=${encodeURIComponent(pin)}`);
-
-        if (!response.ok) {
-          let message = 'Ошибка.';
-          try {
-            const data = await response.json();
-            if (data && data.detail) message = data.detail;
-          } catch {}
-          throw new Error(message);
-        }
-
-        const blob = await response.blob();
-        const disposition = response.headers.get('Content-Disposition') || '';
-        const fileNameMatch = disposition.match(/filename\*?=(?:UTF-8''|"?)([^";]+)/i);
-        const fileName = fileNameMatch ? decodeURIComponent(fileNameMatch[1].replace(/"/g, '')) : 'file.bin';
-
-        const objectUrl = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = objectUrl;
-        a.download = fileName;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        URL.revokeObjectURL(objectUrl);
-
-        setStatus('Готово.', 'ok');
+        const target = `${BACKEND_BASE}/download?url=${encodeURIComponent(url)}&pin=${encodeURIComponent(pin)}`;
+        const frame = document.createElement('iframe');
+        frame.style.display = 'none';
+        frame.src = target;
+        document.body.appendChild(frame);
+        setTimeout(() => frame.remove(), 120000);
+        setStatus('Запрос отправлен.', 'ok');
       } catch (error) {
         setStatus(error.message || 'Ошибка.', 'err');
       } finally {
